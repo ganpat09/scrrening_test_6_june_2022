@@ -2,6 +2,7 @@ import logging
 import re
 from fileinput import FileInput
 import sys
+import threading
 
 formatter = logging.Formatter('[%(asctime)s] p%(process)s {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s',
                               '%m-%d %H:%M:%S')
@@ -30,9 +31,20 @@ class Replacer:
         self.file_name = file_name
         self.replace_content = replace_content_or_regex
         self.replaced_into = replaced_into
+        self.t = threading.Thread(target=self.start_replacement, name='replacement thread')
+        
 
     def do_replacement(self):
         """start replacement"""
+        
+        self.t.start()
+        self.t.join()
+        
+        
+            
+            
+    def start_replacement(self):
+        """start replacement goes backgroundly"""
 
         try:
             with FileInput(self.file_name, inplace=True) as f:
@@ -41,19 +53,20 @@ class Replacer:
                     sys.stdout.write(line.replace(line, re.sub(self.replace_content, self.replaced_into, line, flags=re.IGNORECASE)))
                     logging.info("Successfully replaced")
 
-
+            
 
         except Exception as e:
-            print(e)
-            logging.error(e)
+            
+            logging.error(e)      
+            
+            
 
 
 if __name__ == "__main__":
     # dummy purpose add file in starting
     with(open("example.txt", "w+")) as f:
-        f.write("This is a placement assignment  ")
+        f.write("This is a placement assignment ")
 
+    # for specifically regex use raw string    
     replacer = Replacer("example.txt", "Placement", "screening")
     replacer.do_replacement()
-
-
